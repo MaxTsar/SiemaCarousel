@@ -56,6 +56,7 @@ export default class Siema {
       threshold: 20,
       loop: false,
       rtl: false,
+      indent: 0,
       onInit: () => {},
       onChange: () => {},
     };
@@ -158,8 +159,7 @@ export default class Siema {
    */
   buildSliderFrame() {
     let widthItem = this.selectorWidth / this.perPage;
-    widthItem += 20;
-    // console.log('width item', widthItem)
+    widthItem += this.config.indent;
     const itemsToBuild = this.config.loop ? this.innerElements.length + (2 * this.perPage) : this.innerElements.length;
 
     // Create frame and apply styling
@@ -199,8 +199,6 @@ export default class Siema {
         images[i].style.width = '100%';
       }
     }
-    // console.log('document', this.sliderFrame, images)
-
 
     // Clear selector (just in case something is there) and insert a frame
     this.selector.innerHTML = '';
@@ -214,11 +212,17 @@ export default class Siema {
     const elementContainer = document.createElement('div');
     elementContainer.style.cssFloat = this.config.rtl ? 'right' : 'left';
     elementContainer.style.float = this.config.rtl ? 'right' : 'left';
-    elementContainer.style.marginRight = '20px';
-    // elementContainer.style.width = `${this.config.loop ? 100 / (this.innerElements.length + (this.perPage * 2)) : 100 / (this.innerElements.length)}%`;
-    const width = ((this.selectorWidth - 20 * (this.perPage - 1)) / this.perPage);
-    elementContainer.style.width = `${width}px`;
-    // console.log('build', ((this.selectorWidth - 20 * (this.perPage - 1)) / this.perPage))
+    let width = 0;
+    let unit = '%';
+    if (this.config.indent) {
+      elementContainer.style.marginRight = `${this.config.indent}px`;
+      width = ((this.selectorWidth - this.config.indent * (this.perPage - 1)) / this.perPage);
+      unit = 'px';
+    }
+    else {
+      width = this.config.loop ? 100 / (this.innerElements.length + (this.perPage * 2)) : 100 / (this.innerElements.length);
+    }
+    elementContainer.style.width = `${width}${unit}`;
     elementContainer.appendChild(elm);
     return elementContainer;
   }
@@ -377,10 +381,13 @@ export default class Siema {
   slideToCurrent(enableTransition) {
     // butik
     const currentSlide = this.config.loop ? this.currentSlide + this.perPage : this.currentSlide;
-    const offset = (this.config.rtl ? 1 : -1) * currentSlide * (((this.selectorWidth - 20 * (this.perPage - 1)) / this.perPage) + 20);
-    // console.log('my', ((this.selectorWidth - 20 * (this.perPage - 1)) / this.perPage) + 20)
-    // ((this.selectorWidth - 20 * (this.perPage - 1)) / this.perPage)
-    // console.log('offset', (this.selectorWidth / this.perPage))
+    let offset = 0;
+    if (this.config.indent) {
+      offset = (this.config.rtl ? 1 : -1) * currentSlide * (((this.selectorWidth - this.config.indent * (this.perPage - 1)) / this.perPage) + this.config.indent);
+    }
+    else {
+      offset = (this.config.rtl ? 1 : -1) * currentSlide * (this.selectorWidth / this.perPage);
+    }
 
     if (enableTransition) {
       // This one is tricky, I know but this is a perfect explanation:
@@ -433,7 +440,6 @@ export default class Siema {
     }
 
     this.selectorWidth = this.selector.offsetWidth;
-    // console.log('selector', this.selector)
 
     this.buildSliderFrame();
   }
